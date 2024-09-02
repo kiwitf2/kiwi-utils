@@ -1,4 +1,5 @@
 #include <sourcemod>
+#include <sdktools>
 
 public Plugin myinfo =
 {
@@ -17,43 +18,62 @@ public void OnPluginStart()
  
 public Action Command_Redirect(int client, int args)
 {
-    if (args < 2)
-    {
-        ReplyToCommand(client, "[SM] Usage: sm_redirect <#userid|name> <server>");
+	char arg1[32], arg2[32];
+ 
+	/* Get the first argument */
+	GetCmdArg(1, arg1, sizeof(arg1));
+    GetCmdArg(2, arg2, sizeof(arg2));
+ 
+	/* If there are 2 or more arguments, and the second argument fetch 
+	 * is successful, convert it to an integer.
+	 */
+	if (args < 2)
+	{
+		ReplyToCommand(client, "[SM] Usage: sm_redirect <#userid|name> <server>");
         return Plugin_Handled;
-    }
+	}
  
-    char name[32];
-    char server[32];
-    int target = -1;
-    GetCmdArg(1, name, sizeof(name));
-    GetCmdArg(2, server, sizeof(server));
+	/**
+	 * target_name - stores the noun identifying the target(s)
+	 * target_list - array to store clients
+	 * target_count - variable to store number of clients
+	 * tn_is_ml - stores whether the noun must be translated
+	 */
+	char target_name[MAX_TARGET_LENGTH];
+	int target_list[MAXPLAYERS], target_count;
+	bool tn_is_ml;
  
-    for (int i = 1; i <= MaxClients; i++)
-    {
-        if (!IsClientConnected(i))
-        {
-            continue;
-        }
+	if ((target_count = ProcessTargetString(
+			arg1,
+			client,
+			target_list,
+			MAXPLAYERS,
+			COMMAND_FILTER_NO_IMMUNITY, /* Ignore admin immunity (this isn't needed, im just giving a placeholder value.) */
+			target_name,
+			sizeof(target_name),
+			tn_is_ml)) <= 0)
+	{
+		/* This function replies to the admin with a failure message */
+		ReplyToTargetError(client, target_count);
+		return Plugin_Handled;
+	}
  
-        char other[32];
-        GetClientName(i, other, sizeof(other));
+	for (int i = 0; i < target_count; i++)
+	{
+        ClientCommand(target_list[i],"redirect %s",arg2);
+		LogAction(client, target_list[i], "\"%L\" sent \"%L\" to ip: %s", client, target_list[i], arg2);
+	}
  
-        if (StrEqual(name, other))
-        {
-            target = i;
-        }
-    }
+	if (tn_is_ml)
+	{
+		ShowActivity2(client, "[SM] ", "Redirected %s!", target_name);
+	}
+	else
+	{
+		ShowActivity2(client, "[SM] ", "Redirected %s!", target_name);
+	}
  
-    if (target == -1)
-    {
-        PrintToConsole(client, "Could not find any player with the name: \"%s\"", name);
-        return Plugin_Handled;
-    }
- 
-    ClientCommand(target,"redirect %s",server);
-    PrintToConsole(client, "Sent %s", name," to the server: %s", server);
-   return Plugin_Handled;
+	return Plugin_Handled;
 }
 
 public Action Command_Restart(int client, int args)
