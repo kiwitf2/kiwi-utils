@@ -18,62 +18,58 @@ public void OnPluginStart()
  
 public Action Command_Redirect(int client, int args)
 {
-	char arg1[32], arg2[32];
+    char arg1[32], arg2[32], arg3[32];
  
-	/* Get the first argument */
-	GetCmdArg(1, arg1, sizeof(arg1));
+    /* Get the first argument */
+    GetCmdArg(1, arg1, sizeof(arg1));
     GetCmdArg(2, arg2, sizeof(arg2));
+    GetCmdArg(3, arg3, sizeof(arg3));
  
-	/* If there are 2 or more arguments, and the second argument fetch 
-	 * is successful, convert it to an integer.
-	 */
-	if (args < 2)
-	{
-		ReplyToCommand(client, "[SM] Usage: sm_redirect <#userid|name> <server>");
+    /* If there are 2 or more arguments, and the second argument fetch 
+     * is successful, convert it to an integer.
+     */
+    if (args < 2)
+    {
+        ReplyToCommand(client, "[SM] Usage: sm_redirect <#userid|name> <ip> <port>");
         return Plugin_Handled;
-	}
+    }
  
-	/**
-	 * target_name - stores the noun identifying the target(s)
-	 * target_list - array to store clients
-	 * target_count - variable to store number of clients
-	 * tn_is_ml - stores whether the noun must be translated
-	 */
-	char target_name[MAX_TARGET_LENGTH];
-	int target_list[MAXPLAYERS], target_count;
-	bool tn_is_ml;
+
+    char target_name[MAX_TARGET_LENGTH];
+    int target_list[MAXPLAYERS], target_count;
+    bool tn_is_ml;
  
-	if ((target_count = ProcessTargetString(
-			arg1,
-			client,
-			target_list,
-			MAXPLAYERS,
-			COMMAND_FILTER_NO_IMMUNITY, /* Ignore admin immunity (this isn't needed, im just giving a placeholder value.) */
-			target_name,
-			sizeof(target_name),
-			tn_is_ml)) <= 0)
-	{
-		/* This function replies to the admin with a failure message */
-		ReplyToTargetError(client, target_count);
-		return Plugin_Handled;
-	}
+    if ((target_count = ProcessTargetString(
+            arg1,
+            client,
+            target_list,
+            MAXPLAYERS,
+            COMMAND_FILTER_NO_BOTS, /* Ignore bots (this isn't needed, im just giving a placeholder value.) */
+            target_name,
+            sizeof(target_name),
+            tn_is_ml)) <= 0)
+    {
+        /* This function replies to the admin with a failure message */
+        ReplyToTargetError(client, target_count);
+        return Plugin_Handled;
+    }
  
-	for (int i = 0; i < target_count; i++)
-	{
-        ClientCommand(target_list[i],"redirect %s",arg2);
-		LogAction(client, target_list[i], "\"%L\" sent \"%L\" to ip: %s", client, target_list[i], arg2);
-	}
+    for (int i = 0; i < target_count; i++)
+    {
+        ClientCommand(target_list[i],"redirect %s:%s",arg2,arg3);
+        LogAction(client, target_list[i], "\"%L\" sent \"%L\" to ip: %s", client, target_list[i], arg2);
+    }
  
-	if (tn_is_ml)
-	{
-		ShowActivity2(client, "[SM] ", "Redirected %s!", target_name);
-	}
-	else
-	{
-		ShowActivity2(client, "[SM] ", "Redirected %s!", target_name);
-	}
+    if (tn_is_ml)
+    {
+        ShowActivity2(client, "[SM] ", "Redirected %s!", target_name);
+    }
+    else
+    {
+        ShowActivity2(client, "[SM] ", "Redirected %s!", target_name);
+    }
  
-	return Plugin_Handled;
+    return Plugin_Handled;
 }
 
 public Action Command_Restart(int client, int args)
