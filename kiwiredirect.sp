@@ -18,7 +18,7 @@ public void OnPluginStart()
  
 public Action Command_Redirect(int client, int args)
 {
-    char arg1[32], arg2[32], arg3[32];
+    char arg1[265], arg2[32], arg3[32];
  
     /* Get the first argument */
     GetCmdArg(1, arg1, sizeof(arg1));
